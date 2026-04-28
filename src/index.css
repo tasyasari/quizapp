@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Outfit:wght@700;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+
+  /* Custom Neobrutalist Shadow */
+  --shadow-neo: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-neo-lg: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+}
+
+@layer utilities {
+  .neo-border {
+    @apply border-2 border-black;
+  }
+  .neo-shadow {
+    @apply shadow-neo;
+  }
+  .neo-shadow-lg {
+    @apply shadow-neo-lg;
+  }
+  .neo-btn {
+    @apply transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none;
+  }
+}
