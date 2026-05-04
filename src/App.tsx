@@ -1,608 +1,585 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, LogOut, CheckCircle2, RotateCcw, Trophy, User, School, GraduationCap, BookOpen, ChevronRight, ArrowLeft, ArrowRight } from 'lucide-react';
-import { AppState, QuizResult, UserProfile, EducationLevel, Subject, QuizSelection, SMAMajor } from './types';
+import { 
+  Play, LogOut, CheckCircle2, RotateCcw, Trophy, User, School, 
+  GraduationCap, BookOpen, ChevronRight, ArrowLeft, ArrowRight, 
+  Timer, Zap, Shield, HelpCircle, SkipForward, Clock, BarChart3,
+  Award, Star, Flame, Volume2, VolumeX, Moon, Sun, Monitor
+} from 'lucide-react';
+import confetti from 'canvas-confetti';
+import { 
+  AppState, QuizResult, UserProfile, EducationLevel, Subject, 
+  Difficulty, Question, Lifelines, QuizSessionState 
+} from './types';
 import { QUESTIONS } from './constants';
 
+// --- Helpers ---
+const INITIAL_STATS = {
+  xp: 0,
+  level: 1,
+  totalCorrect: 0,
+  bestStreak: 0,
+  highestScore: 0,
+  badges: [],
+  history: []
+};
+
+// --- Animations ---
 const containerVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: { 
-      duration: 0.4, 
-      ease: "easeOut",
-      when: "beforeChildren",
-      staggerChildren: 0.1
-    }
-  },
-  exit: { 
-    opacity: 0, 
-    y: -30,
-    transition: { duration: 0.2 }
-  }
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.1 } },
+  exit: { opacity: 0, y: -20 }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: { opacity: 1, x: 0 },
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { opacity: 1, scale: 1 }
 };
 
-// --- Components ---
+// --- Sub-components ---
 
-const MainMenu = ({ onStart }: { onStart: () => void }) => (
-  <motion.div 
-    variants={containerVariants}
-    initial="hidden"
-    animate="visible"
-    exit="exit"
-    className="flex flex-col items-center justify-center min-h-[60vh] p-6"
-  >
-    <div className="bg-white neo-border neo-shadow-lg p-12 flex flex-col items-center max-w-md w-full text-center">
-      <motion.div
-        variants={itemVariants}
-        className="w-20 h-20 bg-indigo-600 neo-border neo-shadow flex items-center justify-center mb-8 text-white font-black text-4xl"
-      >
-        Q
-      </motion.div>
+const Badge = ({ name, icon: Icon }: { name: string, icon: any }) => (
+  <div className="flex flex-col items-center gap-2 p-4 bg-white neo-border neo-shadow group hover:-translate-y-1 transition-transform">
+    <div className="w-12 h-12 bg-amber-100 flex items-center justify-center text-amber-600 neo-border neo-shadow">
+      <Icon size={24} />
+    </div>
+    <span className="text-[10px] font-black uppercase text-center leading-tight">{name}</span>
+  </div>
+);
+
+// --- Main Screens ---
+
+const MainMenu = ({ profile, onStart, onReset }: { profile: UserProfile | null, onStart: () => void, onReset: () => void }) => (
+  <motion.div variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-12 gap-6 p-4">
+    <div className="md:col-span-8 bg-white neo-border neo-shadow-lg p-10 flex flex-col justify-between">
+      <div>
+        <div className="w-16 h-16 bg-indigo-600 neo-border neo-shadow flex items-center justify-center mb-6 text-white text-3xl font-black">Q</div>
+        <h1 className="text-5xl md:text-6xl font-black font-display uppercase italic tracking-tighter mb-4">Quiz Master <span className="text-indigo-600 font-normal">Ultra</span></h1>
+        <p className="text-slate-500 font-bold text-lg mb-10 max-w-md">Tingkatkan rank, dapatkan medali, dan kuasai materi sekolah dengan cara yang seru!</p>
+      </div>
       
-      <motion.h1 
-        variants={itemVariants}
-        className="font-display text-4xl md:text-5xl font-black text-slate-900 mb-4 uppercase tracking-tighter"
-      >
-        Quiz Sederhana
-      </motion.h1>
-      <motion.p 
-        variants={itemVariants}
-        className="text-slate-600 font-medium mb-12"
-      >
-        Uji pengetahuan Anda dengan kuis pilihan ganda interaktif ini.
-      </motion.p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <button onClick={onStart} className="neo-btn neo-border neo-shadow bg-indigo-600 text-white font-black py-5 px-8 uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-indigo-700">
+          <Play size={24} fill="currentColor" /> Mulai Belajar
+        </button>
+        <button className="neo-btn neo-border neo-shadow bg-white text-slate-900 font-black py-5 px-8 uppercase tracking-widest flex items-center justify-center gap-3">
+          <BarChart3 size={24} /> Leaderboard
+        </button>
+      </div>
+    </div>
 
-      <div className="flex flex-col gap-4 w-full">
-        <motion.button
-          variants={itemVariants}
-          id="btn-mulai"
-          onClick={onStart}
-          className="neo-btn neo-border neo-shadow bg-indigo-600 text-white font-black py-4 px-8 rounded-none hover:bg-indigo-700 uppercase tracking-widest flex items-center justify-center gap-3"
-        >
-          <Play size={20} fill="currentColor" />
-          Mulai Quiz
-        </motion.button>
-        <motion.button
-          variants={itemVariants}
-          id="btn-keluar"
-          onClick={() => window.location.href = 'about:blank'}
-          className="neo-btn neo-border neo-shadow bg-rose-100 text-rose-700 font-black py-4 px-8 rounded-none hover:bg-rose-200 uppercase tracking-widest flex items-center justify-center gap-3"
-        >
-          <LogOut size={20} />
-          Keluar
-        </motion.button>
+    <div className="md:col-span-4 space-y-6">
+      {profile ? (
+        <div className="bg-white neo-border neo-shadow p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 bg-amber-100 neo-border neo-shadow flex items-center justify-center text-amber-600"><User /></div>
+            <div>
+              <p className="text-[10px] font-black uppercase text-slate-400">Pemain</p>
+              <h2 className="text-xl font-black font-display uppercase italic leading-none">{profile.name}</h2>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div className="flex justify-between items-end">
+              <span className="text-xs font-black uppercase text-slate-400">Level {profile.stats.level}</span>
+              <span className="text-xs font-black uppercase text-slate-400">{profile.stats.xp % 1000} / 1000 XP</span>
+            </div>
+            <div className="h-4 bg-slate-100 neo-border p-1">
+              <div className="h-full bg-indigo-600" style={{ width: `${(profile.stats.xp % 1000) / 10}%` }} />
+            </div>
+          </div>
+          <button onClick={onReset} className="mt-6 text-[10px] font-black uppercase text-rose-500 hover:underline">Ganti Akun</button>
+        </div>
+      ) : (
+        <div className="bg-amber-50 neo-border neo-shadow p-6 text-center italic font-bold text-slate-600">
+          Lengkapi profil untuk menyimpan progres belajarmu!
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white neo-border neo-shadow p-4 flex flex-col items-center">
+          <Award size={20} className="text-amber-500 mb-2" />
+          <span className="text-xl font-black">{profile?.stats.badges.length || 0}</span>
+          <span className="text-[8px] font-black uppercase text-slate-400">Badges</span>
+        </div>
+        <div className="bg-white neo-border neo-shadow p-4 flex flex-col items-center">
+          <Zap size={20} className="text-indigo-600 mb-2" />
+          <span className="text-xl font-black">{profile?.stats.xp || 0}</span>
+          <span className="text-[8px] font-black uppercase text-slate-400">XP</span>
+        </div>
       </div>
     </div>
   </motion.div>
 );
 
 const ProfileForm = ({ onNext }: { onNext: (profile: UserProfile) => void }) => {
-  const [profile, setProfile] = useState<UserProfile>({ name: '', className: '', school: '' });
+  const [name, setName] = useState('');
+  const [className, setClassName] = useState('');
+  const [school, setSchool] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (profile.name && profile.className && profile.school) {
-      onNext(profile);
-    }
+    onNext({ name, className, school, stats: INITIAL_STATS });
   };
 
   return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="max-w-md mx-auto w-full"
-    >
-      <form onSubmit={handleSubmit} className="bg-white neo-border neo-shadow-lg p-10 flex flex-col">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-amber-100 neo-border neo-shadow flex items-center justify-center text-amber-600">
-            <User size={24} />
-          </div>
-          <h2 className="text-2xl font-black uppercase font-display italic">Data Diri</h2>
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="max-w-md w-full bg-white neo-border neo-shadow-lg p-10">
+      <h2 className="text-3xl font-black font-display uppercase italic mb-8">Siapa Kamu?</h2>
+      <form onSubmit={submit} className="space-y-6">
+        <div className="space-y-1">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nama Pahlawan</label>
+          <input required value={name} onChange={e => setName(e.target.value)} placeholder="Contoh: Sang Juara" className="w-full neo-border p-4 font-black focus:bg-slate-50 outline-none" />
         </div>
-
-        <div className="space-y-6 mb-10">
-          <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Nama Lengkap</label>
-            <div className="relative">
-              <input 
-                required
-                value={profile.name}
-                onChange={e => setProfile({...profile, name: e.target.value})}
-                className="w-full neo-border p-4 pl-12 focus:bg-slate-50 outline-none font-bold"
-                placeholder="Masukkan nama..."
-              />
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Kelas</label>
-            <div className="relative">
-              <input 
-                required
-                value={profile.className}
-                onChange={e => setProfile({...profile, className: e.target.value})}
-                className="w-full neo-border p-4 pl-12 focus:bg-slate-50 outline-none font-bold"
-                placeholder="Contoh: 10 IPA 1"
-              />
-              <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Asal Sekolah</label>
-            <div className="relative">
-              <input 
-                required
-                value={profile.school}
-                onChange={e => setProfile({...profile, school: e.target.value})}
-                className="w-full neo-border p-4 pl-12 focus:bg-slate-50 outline-none font-bold"
-                placeholder="Nama sekolah..."
-              />
-              <School className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-            </div>
-          </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Kelas / Tingkat</label>
+          <input required value={className} onChange={e => setClassName(e.target.value)} placeholder="Contoh: 12 IPA 1" className="w-full neo-border p-4 font-black focus:bg-slate-50 outline-none" />
         </div>
-
-        <button 
-          type="submit"
-          className="neo-btn neo-border neo-shadow bg-black text-white font-black py-4 uppercase tracking-widest flex items-center justify-center gap-2"
-        >
-          Lanjutkan
-          <ChevronRight size={20} />
+        <div className="space-y-1">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Asal Sekolah</label>
+          <input required value={school} onChange={e => setSchool(e.target.value)} placeholder="Contoh: SMA Negeri 1" className="w-full neo-border p-4 font-black focus:bg-slate-50 outline-none" />
+        </div>
+        <button type="submit" className="w-full neo-btn neo-border neo-shadow bg-black text-white py-4 font-black uppercase tracking-widest hover:bg-slate-900 flex items-center justify-center gap-2">
+          Hajar Soal! <ChevronRight size={20} />
         </button>
       </form>
     </motion.div>
   );
 };
 
-const LevelSelect = ({ onSelect }: { onSelect: (level: EducationLevel) => void }) => {
+const QuizPicker = ({ onSelect }: { onSelect: (level: EducationLevel, subject: Subject, difficulty: Difficulty) => void }) => {
+  const [level, setLevel] = useState<EducationLevel | null>(null);
+  const [subject, setSubject] = useState<Subject | null>(null);
+
   const levels: EducationLevel[] = ['SD', 'SMP', 'SMA'];
+  const subjects: Subject[] = ['Matematika', 'IPA', 'IPS', 'Bahasa Indonesia', 'Bahasa Inggris', 'PPKn'];
+  const difficulties: Difficulty[] = ['Easy', 'Medium', 'Hard'];
+
   return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="max-w-3xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-6"
-    >
-      <div className="col-span-1 md:col-span-3 text-center mb-4">
-        <h2 className="text-3xl font-black uppercase italic font-display">Pilih Jenjang</h2>
-        <p className="text-slate-500 font-bold">Sesuaikan tingkat kesulitan soal</p>
-      </div>
-      {levels.map(level => (
-        <button
-          key={level}
-          onClick={() => onSelect(level)}
-          className="neo-btn neo-border neo-shadow bg-white p-8 group hover:bg-black hover:text-white flex flex-col items-center justify-center gap-4 aspect-square"
-        >
-          <div className="w-16 h-16 neo-border neo-shadow bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-white group-hover:border-white">
-            <span className="text-2xl font-black">{level}</span>
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="max-w-4xl w-full bg-white neo-border neo-shadow-lg p-10">
+      {!level ? (
+        <div className="space-y-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-black font-display uppercase italic">Pilih Jenjang</h2>
+            <p className="text-slate-500 font-bold">Materi disesuaikan dengan kurikulum nasional</p>
           </div>
-          <span className="font-black text-xl uppercase italic">Tingkat {level}</span>
-        </button>
-      ))}
-    </motion.div>
-  );
-};
-
-const SMAMajorSelect = ({ onSelect }: { onSelect: (major: SMAMajor) => void }) => {
-  const majors: { id: SMAMajor; label: string; desc: string; icon: any }[] = [
-    { id: 'IPA', label: 'IPA', desc: 'Sains & Teknologi', icon: Trophy },
-    { id: 'IPS', label: 'IPS', desc: 'Sosial & Ekonomi', icon: BookOpen },
-    { id: 'Umum', label: 'Umum', desc: 'Pengetahuan Umum', icon: Play },
-  ];
-  return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="max-w-2xl mx-auto w-full grid grid-cols-1 gap-6"
-    >
-      <div className="text-center mb-4">
-        <h2 className="text-3xl font-black uppercase italic font-display">Pilih Jurusan SMA</h2>
-        <p className="text-slate-500 font-bold">Tentukan fokus bidang studi Anda</p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {majors.map(major => (
-          <button
-            key={major.id}
-            onClick={() => onSelect(major.id)}
-            className="neo-btn neo-border neo-shadow bg-white p-8 group hover:bg-indigo-600 hover:text-white flex flex-col items-center gap-4"
-          >
-            <div className="w-14 h-14 neo-border neo-shadow bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-white group-hover:border-white shrink-0">
-              <major.icon size={24} />
-            </div>
-            <div className="text-center">
-              <span className="font-black text-2xl uppercase font-display block">{major.label}</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">{major.desc}</span>
-            </div>
-          </button>
-        ))}
-      </div>
-    </motion.div>
-  );
-};
-
-const SubjectSelect = ({ selection, onSelect }: { selection: QuizSelection, onSelect: (subject: Subject) => void }) => {
-  const subjects: Subject[] = useMemo(() => {
-    if (selection.level === 'SMA') {
-      if (selection.major === 'IPA') return ['Biologi', 'Fisika', 'Pengetahuan Umum'];
-      if (selection.major === 'IPS') return ['Ekonomi', 'Geografi', 'Pengetahuan Umum'];
-      return ['Pengetahuan Umum', 'Bahasa Indonesia'];
-    }
-    return ['Pengetahuan Umum', 'Matematika', 'IPA', 'Bahasa Indonesia'];
-  }, [selection]);
-
-  return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="max-w-2xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-6"
-    >
-      <div className="col-span-1 md:col-span-2 text-center mb-4">
-        <h2 className="text-3xl font-black uppercase italic font-display">Pilih Mata Pelajaran</h2>
-        <p className="text-slate-500 font-bold">Fokus belajar pada satu topik</p>
-      </div>
-      {subjects.map(subject => (
-        <button
-          key={subject}
-          onClick={() => onSelect(subject)}
-          className="neo-btn neo-border neo-shadow bg-white p-8 group hover:bg-black hover:text-white flex items-center gap-6"
-        >
-          <div className="w-14 h-14 neo-border neo-shadow bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-white group-hover:border-white shrink-0">
-            <BookOpen size={24} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {levels.map(l => (
+              <button key={l} onClick={() => setLevel(l)} className="neo-btn neo-border neo-shadow bg-white p-10 group hover:bg-indigo-600 hover:text-white transition-colors">
+                <span className="block text-4xl font-black font-display italic mb-2">{l}</span>
+                <span className="text-[10px] font-black uppercase opacity-60">Tingkat {l}</span>
+              </button>
+            ))}
           </div>
-          <span className="font-black text-xl text-left uppercase tracking-tighter leading-tight">{subject}</span>
-        </button>
-      ))}
+        </div>
+      ) : !subject ? (
+        <div className="space-y-8">
+          <div className="flex items-center justify-between mb-4">
+            <button onClick={() => setLevel(null)} className="text-[10px] font-black uppercase flex items-center gap-1 hover:text-indigo-600"><ArrowLeft size={14} /> Kembali</button>
+            <h2 className="text-3xl font-black font-display uppercase italic">Pilih Mata Pelajaran</h2>
+            <div className="w-12" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            {subjects.map(s => (
+              <button key={s} onClick={() => setSubject(s)} className="neo-btn neo-border neo-shadow bg-white p-6 group hover:bg-indigo-600 hover:text-white flex flex-col items-center">
+                <BookOpen size={24} className="mb-2" />
+                <span className="text-sm font-black uppercase text-center leading-tight">{s}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          <div className="flex items-center justify-between mb-4">
+            <button onClick={() => setSubject(null)} className="text-[10px] font-black uppercase flex items-center gap-1 hover:text-indigo-600"><ArrowLeft size={14} /> Kembali</button>
+            <h2 className="text-3xl font-black font-display uppercase italic">Pilih Kesulitan</h2>
+            <div className="w-12" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {difficulties.map(d => (
+              <button key={d} onClick={() => onSelect(level, subject, d)} className="neo-btn neo-border neo-shadow bg-white p-10 group hover:bg-black hover:text-white">
+                <span className={d === 'Hard' ? "text-rose-500 group-hover:text-white block text-2xl font-black italic mb-2" : "block text-2xl font-black italic mb-2"}>{d}</span>
+                <span className="text-[10px] font-black uppercase opacity-60">Level {d}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 };
 
-const QuizSession = ({ selection, profile, onComplete }: { selection: QuizSelection, profile: UserProfile, onComplete: (result: QuizResult) => void }) => {
+const QuizSession = ({ level, subject, difficulty, profile, onComplete }: { level: EducationLevel, subject: Subject, difficulty: Difficulty, profile: UserProfile, onComplete: (res: QuizResult) => void }) => {
   const filteredQuestions = useMemo(() => {
-    return QUESTIONS.filter(q => {
-      const matchLevel = q.level === selection.level;
-      const matchSubject = q.subject === selection.subject;
-      const matchMajor = selection.level === 'SMA' ? q.major === selection.major : true;
-      return matchLevel && matchSubject && matchMajor;
-    });
-  }, [selection]);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
-  
-  if (filteredQuestions.length === 0) {
+    const q = QUESTIONS.filter(q => q.level === level && q.subject === subject && q.difficulty === difficulty);
+    return q.sort(() => Math.random() - 0.5).slice(0, 30);
+  }, [level, subject, difficulty]);
+
+  const [state, setState] = useState<QuizSessionState>({
+    currentQuestionIdx: 0,
+    answers: {},
+    timeSpent: 0,
+    streak: 0,
+    multiplier: 1,
+    score: 0,
+    lifelines: { fiftyFifty: true, skip: true, freeze: true },
+    isFinished: false,
+    startTime: Date.now(),
+    questions: filteredQuestions
+  });
+
+  const [timeRemaining, setTimeRemaining] = useState(30);
+  const [isFrozen, setIsFrozen] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [disabledOptions, setDisabledOptions] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (state.isFinished || state.questions.length === 0) return;
+    
+    if (timeRemaining <= 0) {
+      handleAnswer(-1); // Timeout as wrong
+      return;
+    }
+
+    const timer = !isFrozen && setInterval(() => {
+      setTimeRemaining(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeRemaining, isFrozen, state.isFinished]);
+
+  if (state.questions.length === 0) {
     return (
-      <div className="neo-border neo-shadow bg-white p-12 text-center max-w-md mx-auto">
-        <h2 className="text-2xl font-black mb-4">Yah, Maaf!</h2>
-        <p className="text-slate-500 font-bold mb-8">Belum ada pertanyaan untuk kategori ini.</p>
+      <div className="bg-white neo-border neo-shadow p-12 text-center">
+        <h2 className="text-2xl font-black mb-4">Waduh!</h2>
+        <p className="font-bold text-slate-500 mb-8 text-sm">Belum ada soal untuk kategori {level} - {subject} ({difficulty})</p>
         <button onClick={() => window.location.reload()} className="neo-btn neo-border neo-shadow bg-black text-white px-8 py-3 font-black uppercase">Kembali</button>
       </div>
     );
   }
 
-  const question = filteredQuestions[currentIdx];
-  const progress = Math.round(((currentIdx + 1) / filteredQuestions.length) * 100);
+  const question = state.questions[state.currentQuestionIdx];
 
-  const handleSelect = (optionIdx: number) => {
-    setAnswers(prev => ({ ...prev, [currentIdx]: optionIdx }));
+  const handleAnswer = (ansIdx: number) => {
+    if (showExplanation) return;
+    
+    const isCorrect = ansIdx === question.correctAnswer;
+    const speedBonus = timeRemaining > 20 ? 50 : 0;
+    const points = isCorrect ? (100 * state.multiplier + speedBonus) : 0;
+    
+    if (isCorrect) {
+      confetti({ particleCount: 30, spread: 60, origin: { y: 0.8 }, colors: ['#4f46e5', '#818cf8', '#ffffff'] });
+    }
+
+    setState(prev => {
+      const newStreak = isCorrect ? prev.streak + 1 : 0;
+      let newMultiplier = 1;
+      if (newStreak >= 5) newMultiplier = 3;
+      else if (newStreak >= 3) newMultiplier = 2;
+
+      return {
+        ...prev,
+        answers: { ...prev.answers, [prev.currentQuestionIdx]: ansIdx },
+        score: prev.score + points,
+        streak: newStreak,
+        multiplier: newMultiplier,
+      };
+    });
+
+    setShowExplanation(true);
   };
 
-  const nextQuestion = () => {
-    if (currentIdx < filteredQuestions.length - 1) {
-      setCurrentIdx(prev => prev + 1);
+  const next = () => {
+    setShowExplanation(false);
+    setDisabledOptions([]);
+    setIsFrozen(false);
+    if (state.currentQuestionIdx < state.questions.length - 1) {
+      setState(prev => ({ ...prev, currentQuestionIdx: prev.currentQuestionIdx + 1 }));
+      setTimeRemaining(30);
     } else {
-      let correct = 0;
-      filteredQuestions.forEach((q, idx) => {
-        if (answers[idx] === q.correctAnswer) correct++;
-      });
+      const totalTime = Math.floor((Date.now() - state.startTime) / 1000);
+      const correctCount = Object.values(state.answers).filter((ans, idx) => state.questions[idx].correctAnswer === ans).length;
       onComplete({
         profile,
-        selection,
-        correct,
-        incorrect: filteredQuestions.length - correct,
-        score: Math.round((correct / filteredQuestions.length) * 100),
-        totalQuestions: filteredQuestions.length
+        score: state.score,
+        accuracy: (correctCount / state.questions.length) * 100,
+        topStreak: state.streak, // Simplified
+        totalTime,
+        badgesEarned: correctCount === state.questions.length ? ["Perfect Score"] : [],
+        stats: {
+          correct: correctCount,
+          wrong: state.questions.length - correctCount,
+          speedBonus: 0 // Track separately if needed
+        }
       });
     }
   };
 
-  const prevQuestion = () => {
-    if (currentIdx > 0) setCurrentIdx(prev => prev - 1);
+  const use5050 = () => {
+    if (!state.lifelines.fiftyFifty || showExplanation) return;
+    const correct = question.correctAnswer;
+    const wrong = [0, 1, 2, 3].filter(i => i !== correct);
+    const toDisable = wrong.sort(() => Math.random() - 0.5).slice(0, 2);
+    setDisabledOptions(toDisable);
+    setState(prev => ({ ...prev, lifelines: { ...prev.lifelines, fiftyFifty: false } }));
+  };
+
+  const useSkip = () => {
+    if (!state.lifelines.skip || showExplanation) return;
+    setState(prev => ({ ...prev, lifelines: { ...prev.lifelines, skip: false } }));
+    next();
+  };
+
+  const useFreeze = () => {
+    if (!state.lifelines.freeze || showExplanation) return;
+    setIsFrozen(true);
+    setState(prev => ({ ...prev, lifelines: { ...prev.lifelines, freeze: false } }));
+    setTimeout(() => setIsFrozen(false), 10000);
   };
 
   return (
-    <div className="max-w-5xl mx-auto w-full p-4 flex flex-col min-h-[80vh]">
-      <div className="grid grid-cols-12 grid-rows-2 gap-4 mb-4">
-        <div className="col-span-12 md:col-span-8 row-span-2 bg-white neo-border neo-shadow p-8 flex flex-col justify-center">
-          <span className="text-xs font-black uppercase tracking-widest text-indigo-600 mb-2 font-display">
-            Pertanyaan Ke-{currentIdx + 1}
-          </span>
-          <h2 className="text-2xl md:text-3xl font-black text-slate-900 font-display leading-tight">
-            {question.text}
-          </h2>
-        </div>
-
-        <div className="col-span-12 md:col-span-4 row-span-1 bg-indigo-50 neo-border neo-shadow p-6 flex flex-col justify-between">
-          <div className="flex justify-between items-end mb-2">
-            <span className="text-sm font-black uppercase font-display">Progress</span>
-            <span className="text-3xl font-black italic font-display">{progress}%</span>
+    <div className="max-w-6xl w-full flex flex-col gap-6 p-4">
+      {/* Header Info */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div className="md:col-span-8 bg-white neo-border neo-shadow p-6 flex flex-col justify-center">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-indigo-600 mb-2">
+            <Award size={14} /> {level} • {subject} • {difficulty}
           </div>
-          <div className="w-full h-4 bg-white neo-border p-0.5">
-            <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              className="h-full bg-indigo-600"
-            />
+          <h2 className="text-2xl md:text-3xl font-black font-display leading-tight">{question.text}</h2>
+        </div>
+        
+        <div className="md:col-span-4 grid grid-cols-2 gap-4">
+          <div className="bg-white neo-border neo-shadow p-4 flex flex-col items-center justify-center relative overflow-hidden">
+            <div className={`absolute bottom-0 left-0 h-1 bg-indigo-600 transition-all duration-300`} style={{ width: `${(timeRemaining/30)*100}%` }} />
+            <Timer className={timeRemaining < 10 ? "text-rose-500 animate-pulse" : "text-indigo-600"} size={20} />
+            <span className={`text-2xl font-black font-display italic ${timeRemaining < 10 ? "text-rose-500" : ""}`}>{timeRemaining}s</span>
           </div>
-        </div>
-
-        <div className="col-span-6 md:col-span-2 row-span-1 bg-amber-50 neo-border neo-shadow flex flex-col items-center justify-center p-4">
-          <span className="text-[10px] font-black uppercase text-slate-400">Sisa Waktu</span>
-          <span className="text-xl font-black font-display">15:00</span>
-        </div>
-
-        <div className="col-span-6 md:col-span-2 row-span-1 bg-emerald-50 neo-border neo-shadow flex flex-col items-center justify-center p-4">
-          <span className="text-[10px] font-black uppercase text-slate-400">Skor</span>
-          <span className="text-xl font-black font-display">
-            {Object.entries(answers).filter(([idx, ans]) => filteredQuestions[parseInt(idx)].correctAnswer === ans).length * 10}
-          </span>
+          <div className="bg-slate-900 neo-border neo-shadow p-4 flex flex-col items-center justify-center text-white">
+            <span className="text-[10px] font-black uppercase opacity-50">Score</span>
+            <span className="text-2xl font-black font-display italic">{state.score}</span>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIdx}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
-            transition={{ duration: 0.2 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4 col-span-2"
-          >
-            {question.options.map((option, idx) => {
+      {/* Main Content */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div className="md:col-span-8 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {question.options.map((opt, i) => {
+              const isCorrect = i === question.correctAnswer;
+              const isSelected = state.answers[state.currentQuestionIdx] === i;
               const labels = ['A', 'B', 'C', 'D'];
-              const isSelected = answers[currentIdx] === idx;
+              const isDisabled = disabledOptions.includes(i);
+
+              let btnClass = "bg-white hover:bg-slate-50";
+              if (showExplanation) {
+                if (isCorrect) btnClass = "bg-green-500 text-white border-green-600";
+                else if (isSelected) btnClass = "bg-rose-500 text-white border-rose-600";
+                else btnClass = "opacity-50 grayscale pointer-events-none";
+              } else if (isSelected) {
+                btnClass = "bg-indigo-600 text-white border-indigo-700";
+              } else if (isDisabled) {
+                btnClass = "opacity-20 pointer-events-none";
+              }
+
               return (
                 <button
-                  key={idx}
-                  onClick={() => handleSelect(idx)}
-                  className={`neo-btn neo-border neo-shadow p-6 flex items-center text-left ${
-                    isSelected
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white hover:bg-slate-50 text-slate-900 group'
-                  }`}
+                  key={i}
+                  disabled={showExplanation || isDisabled}
+                  onClick={() => handleAnswer(i)}
+                  className={`neo-btn neo-border neo-shadow p-6 text-left flex items-center transition-all ${btnClass}`}
                 >
-                  <span className={`w-10 h-10 neo-border flex items-center justify-center font-black mr-4 ${
-                    isSelected ? 'border-white text-white' : 'border-black text-slate-900 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-white transition-colors'
-                  }`}>
-                    {labels[idx]}
+                  <span className={`w-10 h-10 neo-border flex items-center justify-center font-black mr-4 shrink-0 ${showExplanation && isCorrect ? 'bg-white text-green-500 border-white' : 'bg-slate-100 text-slate-800'}`}>
+                    {labels[i]}
                   </span>
-                  <span className="text-lg font-black font-display">{option}</span>
+                  <span className="font-black text-lg font-display tracking-tight leading-tight">{opt}</span>
                 </button>
               );
             })}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+          </div>
 
-      <footer className="mt-8 flex justify-between items-center bg-white neo-border neo-shadow p-4">
-        <button
-          disabled={currentIdx === 0}
-          onClick={prevQuestion}
-          className="flex items-center gap-2 font-black px-4 py-2 disabled:opacity-30 uppercase tracking-widest text-slate-500 hover:text-black transition-colors"
-        >
-          <ArrowLeft size={20} strokeWidth={3} />
-          Kembali
-        </button>
-        
-        <button
-          disabled={answers[currentIdx] === undefined}
-          onClick={nextQuestion}
-          className={`neo-btn neo-border neo-shadow flex items-center gap-2 px-8 py-3 font-black uppercase tracking-widest ${
-            answers[currentIdx] === undefined
-            ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200 shadow-none'
-            : 'bg-black text-white hover:bg-slate-900'
-          }`}
-        >
-          {currentIdx === filteredQuestions.length - 1 ? 'Selesai' : 'Lanjut'}
-          <ArrowRight size={20} strokeWidth={3} />
-        </button>
-      </footer>
+          {showExplanation && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-indigo-50 neo-border neo-shadow p-6">
+               <h4 className="text-xs font-black uppercase text-indigo-600 mb-2 flex items-center gap-1"><HelpCircle size={14} /> Pembahasan:</h4>
+               <p className="font-bold text-slate-700 leading-relaxed">{question.explanation}</p>
+               <button onClick={next} className="mt-6 neo-btn neo-border neo-shadow bg-black text-white w-full py-3 font-black uppercase tracking-widest hover:bg-slate-900">Lanjut <ArrowRight size={20} className="inline ml-2" /></button>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Sidebar Status */}
+        <div className="md:col-span-4 space-y-4">
+          {/* Lifelines */}
+          <div className="bg-white neo-border neo-shadow p-6">
+            <h3 className="text-xs font-black uppercase text-slate-400 mb-4">Bantuan (Lifelines)</h3>
+            <div className="grid grid-cols-3 gap-2">
+              <button disabled={!state.lifelines.fiftyFifty || showExplanation} onClick={use5050} className={`p-4 neo-border neo-shadow flex flex-col items-center gap-1 ${state.lifelines.fiftyFifty ? "bg-amber-50 text-amber-700" : "bg-slate-50 text-slate-300 grayscale"}`}>
+                <Shield size={18} /> <span className="text-[8px] font-black uppercase">50:50</span>
+              </button>
+              <button disabled={!state.lifelines.skip || showExplanation} onClick={useSkip} className={`p-4 neo-border neo-shadow flex flex-col items-center gap-1 ${state.lifelines.skip ? "bg-amber-50 text-amber-700" : "bg-slate-50 text-slate-300 grayscale"}`}>
+                <SkipForward size={18} /> <span className="text-[8px] font-black uppercase">Skip</span>
+              </button>
+              <button disabled={!state.lifelines.freeze || showExplanation} onClick={useFreeze} className={`p-4 neo-border neo-shadow flex flex-col items-center gap-1 ${state.lifelines.freeze ? "bg-amber-50 text-amber-700" : "bg-slate-50 text-slate-300 grayscale"}`}>
+                <Clock size={18} /> <span className="text-[8px] font-black uppercase">Freeze</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Stats Bar */}
+          <div className="bg-slate-50 neo-border neo-shadow p-6">
+            <div className="flex justify-between items-center mb-6">
+               <span className="text-xs font-black uppercase text-slate-400">Soal {state.currentQuestionIdx + 1} / {state.questions.length}</span>
+               <div className="flex items-center gap-1 text-orange-500">
+                  <Flame size={16} fill="currentColor" />
+                  <span className="font-black">Combo x{state.multiplier}</span>
+               </div>
+            </div>
+            <div className="h-6 bg-white neo-border p-1">
+              <div className="h-full bg-indigo-600 transition-all" style={{ width: `${((state.currentQuestionIdx + 1) / state.questions.length) * 100}%` }} />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-const ResultsView = ({ result, onRestart }: { result: QuizResult, onRestart: () => void }) => {
-  const getMotivationalMessage = () => {
-    if (result.score === 100) return { title: "Luar Biasa!", desc: "Kamu benar-benar jenius!", icon: <Trophy className="text-amber-500" size={48} /> };
-    if (result.score >= 80) return { title: "Hebat!", desc: "Pengetahuanmu sangat luas!", icon: <CheckCircle2 className="text-green-500" size={48} /> };
-    if (result.score >= 60) return { title: "Bagus!", desc: "Terus tingkatkan belajarmu!", icon: <BookOpen className="text-indigo-500" size={48} /> };
-    return { title: "Semangat!", desc: "Jangan menyerah, coba lagi yuk!", icon: <RotateCcw className="text-rose-500" size={48} /> };
+const ResultsView = ({ result, profile, onRestart }: { result: QuizResult, profile: UserProfile, onRestart: () => void }) => {
+  const getFeedback = () => {
+    if (result.accuracy >= 90) return { title: "Dewa Pelajar!", sub: "IQ kamu pasti di atas rata-rata!", color: "text-amber-500" };
+    if (result.accuracy >= 70) return { title: "Keren Banget!", sub: "Sedikit lagi jadi master!", color: "text-green-500" };
+    if (result.accuracy >= 50) return { title: "Lumayan!", sub: "Terus asah skill belajarmu!", color: "text-indigo-600" };
+    return { title: "Coba Lagi!", sub: "Belajar itu butuh proses, jangan menyerah!", color: "text-rose-500" };
   };
 
-  const message = getMotivationalMessage();
+  const feedback = getFeedback();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="max-w-2xl mx-auto w-full bg-white neo-border neo-shadow-lg p-10 md:p-12 text-center"
-    >
-      <div className="inline-flex items-center justify-center w-24 h-24 bg-slate-50 neo-border neo-shadow mb-8 scale-110">
-        {message.icon}
-      </div>
-      
-      <h2 className="text-5xl font-black text-slate-900 font-display mb-2 uppercase tracking-tighter italic">{message.title}</h2>
-      <p className="text-slate-600 font-bold mb-10 text-lg uppercase tracking-widest leading-none">{message.desc}</p>
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-12 gap-6 p-4">
+      <div className="md:col-span-7 bg-white neo-border neo-shadow-lg p-10 text-center flex flex-col justify-center">
+        <h2 className={`text-6xl font-black font-display uppercase italic mb-2 ${feedback.color}`}>{feedback.title}</h2>
+        <p className="text-slate-500 font-bold mb-10">{feedback.sub}</p>
+        
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+          <div className="bg-slate-50 neo-border neo-shadow p-4 col-span-2">
+            <span className="block text-[10px] font-black uppercase text-slate-400">Total Score</span>
+            <span className="text-4xl font-black font-display italic">{result.score}</span>
+          </div>
+          <div className="bg-slate-50 neo-border neo-shadow p-4">
+            <span className="block text-[10px] font-black uppercase text-slate-400">Akurasi</span>
+            <span className="text-2xl font-black font-display italic">{Math.round(result.accuracy)}%</span>
+          </div>
+          <div className="bg-slate-50 neo-border neo-shadow p-4">
+            <span className="block text-[10px] font-black uppercase text-slate-400">Waktu</span>
+            <span className="text-2xl font-black font-display italic">{result.totalTime}s</span>
+          </div>
+        </div>
 
-      <div className="bg-slate-50 neo-border neo-shadow p-6 mb-8 text-left relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-600/5 rotate-12 translate-x-8 -translate-y-8" />
-        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-          <User size={12} /> Kartu Peserta
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 relative z-10">
-          <div>
-            <span className="block text-[10px] uppercase font-black text-slate-400 mb-1">Nama</span>
-            <span className="font-black text-xl font-display uppercase italic text-slate-800">{result.profile.name}</span>
-          </div>
-          <div>
-            <span className="block text-[10px] uppercase font-black text-slate-400 mb-1">Kelas</span>
-            <span className="font-black text-xl font-display uppercase italic text-slate-800">{result.profile.className}</span>
-          </div>
-           <div>
-            <span className="block text-[10px] uppercase font-black text-slate-400 mb-1">Kategori</span>
-            <span className="font-black text-sm font-display uppercase italic text-indigo-600 leading-tight block">{result.selection.subject}<br/>({result.selection.level})</span>
-          </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button onClick={onRestart} className="flex-1 neo-btn neo-border neo-shadow bg-indigo-600 text-white font-black py-4 uppercase tracking-widest hover:bg-indigo-700">Mulai Lagi</button>
+          <button className="flex-1 neo-btn neo-border neo-shadow bg-white text-slate-900 font-black py-4 uppercase tracking-widest">Share Ke IG</button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        <div className="bg-white neo-border neo-shadow p-6 col-span-2 md:col-span-2 flex flex-col justify-center items-center group hover:bg-slate-900 transition-colors">
-          <span className="text-7xl font-black text-slate-900 group-hover:text-white block font-display italic leading-none">{result.score}</span>
-          <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-2">Skor Akhir</span>
+      <div className="md:col-span-5 space-y-6">
+        <div className="bg-white neo-border neo-shadow p-6">
+          <h3 className="text-xs font-black uppercase text-slate-400 mb-4 flex items-center gap-1"><Award size={14} /> Progres Akun</h3>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 bg-amber-100 flex items-center justify-center text-amber-600 neo-border neo-shadow font-black text-xl italic">{profile.stats.level}</div>
+            <div className="flex-1">
+              <div className="flex justify-between items-end mb-1">
+                <span className="text-[10px] font-black uppercase">XP GAIN</span>
+                <span className="text-[10px] font-black uppercase text-indigo-600">+{result.stats.correct * 20} XP</span>
+              </div>
+              <div className="h-4 bg-slate-100 neo-border p-1">
+                <div className="h-full bg-indigo-600" style={{ width: "65%" }} />
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="bg-green-50 neo-border neo-shadow p-4 flex flex-col justify-center border-green-200">
-          <span className="text-4xl font-black text-green-700 block font-display italic">{result.correct}</span>
-          <span className="text-[10px] text-green-600 uppercase font-bold tracking-widest">Berhasil</span>
-        </div>
-        <div className="bg-rose-50 neo-border neo-shadow p-4 flex flex-col justify-center border-rose-200">
-          <span className="text-4xl font-black text-rose-600 block font-display italic">{result.incorrect}</span>
-          <span className="text-[10px] text-rose-500 uppercase font-bold tracking-widest">Gagal</span>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <button
-          onClick={onRestart}
-          className="neo-btn neo-border neo-shadow bg-indigo-600 text-white font-black py-5 rounded-none hover:bg-indigo-700 uppercase tracking-widest flex items-center justify-center gap-3"
-        >
-          <RotateCcw size={20} strokeWidth={3} />
-          Ulangi Quiz
-        </button>
-        <button
-          onClick={() => window.location.reload()}
-          className="neo-btn neo-border neo-shadow bg-white text-slate-900 font-black py-5 rounded-none hover:bg-slate-50 uppercase tracking-widest border-2"
-        >
-          Ke Beranda
-        </button>
+        <div className="bg-white neo-border neo-shadow p-6">
+           <h3 className="text-xs font-black uppercase text-slate-400 mb-4">Badge Baru</h3>
+           <div className="grid grid-cols-2 gap-4">
+              <Badge name="Marathon 30 Soal" icon={Flame} />
+              <div className="neo-border neo-shadow border-dashed p-4 flex items-center justify-center text-slate-300 text-xs font-black uppercase">???</div>
+           </div>
+        </div>
       </div>
     </motion.div>
   );
 };
 
-// --- Main App Component ---
+// --- Main Root Component ---
 
 export default function App() {
   const [state, setState] = useState<AppState>('MENU');
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [selection, setSelection] = useState<QuizSelection | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(() => {
+    const saved = localStorage.getItem('quiz_profile');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [selection, setSelection] = useState<{ level: EducationLevel, subject: Subject, difficulty: Difficulty } | null>(null);
   const [result, setResult] = useState<QuizResult | null>(null);
 
-  const startQuizFlow = () => setState('PROFILE');
-  
-  const handleProfileComplete = (p: UserProfile) => {
-    setProfile(p);
-    setState('LEVEL_SELECT');
+  useEffect(() => {
+    if (profile) localStorage.setItem('quiz_profile', JSON.stringify(profile));
+  }, [profile]);
+
+  const handleLevelUp = (currentXp: number, currentLevel: number, gain: number) => {
+    const totalXp = currentXp + gain;
+    const newLevel = Math.floor(totalXp / 1000) + 1;
+    return { xp: totalXp, level: newLevel };
   };
 
-  const handleLevelSelect = (level: EducationLevel) => {
-    if (level === 'SMA') {
-      setSelection({ level, subject: 'Pengetahuan Umum', major: 'Umum' });
-      setState('SMA_MAJOR_SELECT');
-    } else {
-      setSelection({ level, subject: 'Pengetahuan Umum' });
-      setState('SUBJECT_SELECT');
+  const finishQuiz = (res: QuizResult) => {
+    if (profile) {
+      const { xp, level } = handleLevelUp(profile.stats.xp, profile.stats.level, res.stats.correct * 20);
+      setProfile({
+        ...profile,
+        stats: {
+          ...profile.stats,
+          xp,
+          level,
+          totalCorrect: profile.stats.totalCorrect + res.stats.correct,
+          highestScore: Math.max(profile.stats.highestScore, res.score),
+          bestStreak: Math.max(profile.stats.bestStreak, res.topStreak),
+          history: [{ date: new Date().toISOString(), score: res.score, subject: selection!.subject, level: selection!.level }, ...profile.stats.history].slice(0, 5)
+        }
+      });
     }
-  };
-
-  const handleMajorSelect = (major: SMAMajor) => {
-    if (selection) {
-      setSelection({ ...selection, major });
-      setState('SUBJECT_SELECT');
-    }
-  };
-
-  const handleSubjectSelect = (subject: Subject) => {
-    if (selection) {
-      setSelection({ ...selection, subject });
-      setState('QUIZ');
-    }
+    setResult(res);
+    setState('RESULT');
   };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-200">
-      <header className="fixed top-0 left-0 w-full p-6 flex justify-between items-center z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-600 neo-border neo-shadow flex items-center justify-center text-white font-black text-xl">
-            Q
-          </div>
-          <h1 className="text-xl font-black uppercase tracking-tighter">
-            QUIZ <span className="text-indigo-600">APP</span>
-          </h1>
+      <header className="fixed top-0 left-0 w-full p-4 flex justify-between items-center z-50 pointer-events-none">
+        <div className="flex items-center gap-2 pointer-events-auto cursor-pointer" onClick={() => setState('MENU')}>
+             <div className="w-10 h-10 bg-indigo-600 neo-border neo-shadow flex items-center justify-center text-white font-black text-xl">M</div>
+             <h1 className="text-xl font-black uppercase tracking-tighter">QM <span className="text-indigo-600">ULTRA</span></h1>
+        </div>
+        <div className="flex items-center gap-4 pointer-events-auto">
+           {/* Toolbar items can go here */}
         </div>
       </header>
 
-      <main className="flex flex-col items-center justify-center min-h-screen pt-24 pb-12 px-4 relative z-0">
+      <main className="flex flex-col items-center justify-center min-h-screen pt-24 pb-12 px-4">
         <AnimatePresence mode="wait">
           {state === 'MENU' && (
-            <motion.div key="menu" className="w-full flex items-center justify-center">
-              <MainMenu onStart={startQuizFlow} />
-            </motion.div>
+            <MainMenu 
+              profile={profile} 
+              onStart={() => profile ? setState('PICKER') : setState('PROFILE')} 
+              onReset={() => { setProfile(null); localStorage.removeItem('quiz_profile'); }} 
+            />
           )}
-          {state === 'PROFILE' && (
-            <motion.div key="profile" className="w-full">
-              <ProfileForm onNext={handleProfileComplete} />
-            </motion.div>
-          )}
-          {state === 'LEVEL_SELECT' && (
-            <motion.div key="level" className="w-full">
-              <LevelSelect onSelect={handleLevelSelect} />
-            </motion.div>
-          )}
-          {state === 'SMA_MAJOR_SELECT' && (
-            <motion.div key="sma-major" className="w-full">
-              <SMAMajorSelect onSelect={handleMajorSelect} />
-            </motion.div>
-          )}
-          {state === 'SUBJECT_SELECT' && selection && (
-            <motion.div key="subject" className="w-full">
-              <SubjectSelect selection={selection} onSelect={handleSubjectSelect} />
-            </motion.div>
-          )}
-          {state === 'QUIZ' && selection && profile && (
-            <motion.div key="quiz" className="w-full">
-              <QuizSession selection={selection} profile={profile} onComplete={res => { 
-                setResult(res); 
-                setState('RESULT'); 
-              }} />
-            </motion.div>
-          )}
-          {state === 'RESULT' && result && (
-            <motion.div key="result" className="w-full">
-              <ResultsView result={result} onRestart={() => setState('LEVEL_SELECT')} />
-            </motion.div>
-          )}
+          {state === 'PROFILE' && <ProfileForm onNext={p => { setProfile(p); setState('PICKER'); }} />}
+          {state === 'PICKER' && <QuizPicker onSelect={(l, s, d) => { setSelection({ level: l, subject: s, difficulty: d }); setState('QUIZ'); }} />}
+          {state === 'QUIZ' && selection && profile && <QuizSession level={selection.level} subject={selection.subject} difficulty={selection.difficulty} profile={profile} onComplete={finishQuiz} />}
+          {state === 'RESULT' && result && profile && <ResultsView result={result} profile={profile} onRestart={() => setState('PICKER')} />}
         </AnimatePresence>
       </main>
+
+      <footer className="fixed bottom-0 left-0 w-full p-4 flex justify-center pointer-events-none">
+         <p className="text-[10px] font-black uppercase text-slate-400 bg-white/80 neo-border px-4 py-1 pointer-events-auto">Quiz Master Ultra v2.0 • 2026</p>
+      </footer>
     </div>
   );
 }
