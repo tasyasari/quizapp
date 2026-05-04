@@ -15,6 +15,12 @@ export interface Question {
 
 export type AppState = 'MENU' | 'PROFILE' | 'PICKER' | 'QUIZ' | 'RESULT' | 'LEADERBOARD' | 'ACHIEVEMENTS';
 
+export interface LeaderboardEntry {
+  name: string;
+  score: number;
+  level: number;
+}
+
 export interface UserStats {
   xp: number;
   level: number;

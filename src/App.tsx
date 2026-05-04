@@ -49,7 +49,7 @@ const Badge = ({ name, icon: Icon }: { name: string, icon: any }) => (
 
 // --- Main Screens ---
 
-const MainMenu = ({ profile, onStart, onReset }: { profile: UserProfile | null, onStart: () => void, onReset: () => void }) => (
+const MainMenu = ({ profile, onStart, onMarathon, onLeaderboard, onReset }: { profile: UserProfile | null, onStart: () => void, onMarathon: () => void, onLeaderboard: () => void, onReset: () => void }) => (
   <motion.div variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-12 gap-6 p-4">
     <div className="md:col-span-8 bg-white neo-border neo-shadow-lg p-10 flex flex-col justify-between">
       <div>
@@ -62,7 +62,10 @@ const MainMenu = ({ profile, onStart, onReset }: { profile: UserProfile | null, 
         <button onClick={onStart} className="neo-btn neo-border neo-shadow bg-indigo-600 text-white font-black py-5 px-8 uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-indigo-700">
           <Play size={24} fill="currentColor" /> Mulai Belajar
         </button>
-        <button className="neo-btn neo-border neo-shadow bg-white text-slate-900 font-black py-5 px-8 uppercase tracking-widest flex items-center justify-center gap-3">
+        <button onClick={onMarathon} className="neo-btn neo-border neo-shadow bg-amber-500 text-white font-black py-5 px-8 uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-amber-600">
+          <Flame size={24} fill="currentColor" /> Mode Marathon
+        </button>
+        <button onClick={onLeaderboard} className="col-span-1 sm:col-span-2 neo-btn neo-border neo-shadow bg-white text-slate-900 font-black py-5 px-8 uppercase tracking-widest flex items-center justify-center gap-3">
           <BarChart3 size={24} /> Leaderboard
         </button>
       </div>
@@ -126,7 +129,7 @@ const ProfileForm = ({ onNext }: { onNext: (profile: UserProfile) => void }) => 
       <h2 className="text-3xl font-black font-display uppercase italic mb-8">Siapa Kamu?</h2>
       <form onSubmit={submit} className="space-y-6">
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nama Pahlawan</label>
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nama Lengkap</label>
           <input required value={name} onChange={e => setName(e.target.value)} placeholder="Contoh: Sang Juara" className="w-full neo-border p-4 font-black focus:bg-slate-50 outline-none" />
         </div>
         <div className="space-y-1">
@@ -210,7 +213,19 @@ const QuizPicker = ({ onSelect }: { onSelect: (level: EducationLevel, subject: S
 const QuizSession = ({ level, subject, difficulty, profile, onComplete }: { level: EducationLevel, subject: Subject, difficulty: Difficulty, profile: UserProfile, onComplete: (res: QuizResult) => void }) => {
   const filteredQuestions = useMemo(() => {
     const q = QUESTIONS.filter(q => q.level === level && q.subject === subject && q.difficulty === difficulty);
-    return q.sort(() => Math.random() - 0.5).slice(0, 30);
+    return q.sort(() => Math.random() - 0.5).slice(0, 30).map(question => {
+      const options = [...question.options];
+      const correctText = options[question.correctAnswer];
+      // Shuffle options
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[options[j] ? j : i]] = [options[options[j] ? j : i], options[i]];
+      }
+      // Actually simpler shuffle
+      const shuffled = [...question.options].sort(() => Math.random() - 0.5);
+      const newCorrectIdx = shuffled.indexOf(correctText);
+      return { ...question, options: shuffled, correctAnswer: newCorrectIdx };
+    });
   }, [level, subject, difficulty]);
 
   const [state, setState] = useState<QuizSessionState>({
@@ -475,7 +490,6 @@ const ResultsView = ({ result, profile, onRestart }: { result: QuizResult, profi
 
         <div className="flex flex-col sm:flex-row gap-4">
           <button onClick={onRestart} className="flex-1 neo-btn neo-border neo-shadow bg-indigo-600 text-white font-black py-4 uppercase tracking-widest hover:bg-indigo-700">Mulai Lagi</button>
-          <button className="flex-1 neo-btn neo-border neo-shadow bg-white text-slate-900 font-black py-4 uppercase tracking-widest">Share Ke IG</button>
         </div>
       </div>
 
@@ -508,6 +522,55 @@ const ResultsView = ({ result, profile, onRestart }: { result: QuizResult, profi
   );
 };
 
+const LeaderboardView = ({ onBack }: { onBack: () => void }) => {
+  const [entries, setEntries] = useState<any[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('quiz_leaderboard');
+    if (saved) {
+      setEntries(JSON.parse(saved));
+    } else {
+      const mock = [
+        { name: "Andi Saputra", score: 2500, level: 12 },
+        { name: "Budi Setiawan", score: 2100, level: 10 },
+        { name: "Citra Lestari", score: 1800, level: 8 },
+        { name: "Dina Permata", score: 1500, level: 7 },
+        { name: "Eko Prasetyo", score: 1200, level: 5 }
+      ];
+      setEntries(mock);
+      localStorage.setItem('quiz_leaderboard', JSON.stringify(mock));
+    }
+  }, []);
+
+  return (
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="max-w-2xl w-full bg-white neo-border neo-shadow-lg p-10">
+      <div className="flex items-center justify-between mb-8">
+        <button onClick={onBack} className="text-[10px] font-black uppercase flex items-center gap-1 hover:text-indigo-600"><ArrowLeft size={14} /> Kembali</button>
+        <h2 className="text-3xl font-black font-display uppercase italic">Leaderboard</h2>
+        <div className="w-12" />
+      </div>
+
+      <div className="space-y-4">
+        {entries.sort((a,b) => b.score - a.score).map((entry, i) => (
+          <div key={i} className="flex items-center gap-4 p-4 neo-border neo-shadow bg-slate-50">
+            <div className={`w-10 h-10 neo-border flex items-center justify-center font-black ${i === 0 ? 'bg-amber-400' : i === 1 ? 'bg-slate-300' : i === 2 ? 'bg-amber-600 text-white' : 'bg-white'}`}>
+              {i + 1}
+            </div>
+            <div className="flex-1">
+              <h4 className="font-black uppercase italic">{entry.name}</h4>
+              <p className="text-[10px] font-black text-slate-400 uppercase">Level {entry.level}</p>
+            </div>
+            <div className="text-right">
+              <span className="text-xl font-black font-display italic text-indigo-600">{entry.score}</span>
+              <span className="block text-[8px] font-black uppercase text-slate-400">Total XP</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
 // --- Main Root Component ---
 
 export default function App() {
@@ -532,7 +595,14 @@ export default function App() {
   const finishQuiz = (res: QuizResult) => {
     if (profile) {
       const { xp, level } = handleLevelUp(profile.stats.xp, profile.stats.level, res.stats.correct * 20);
-      setProfile({
+      const isMarathon = selection && QUESTIONS.filter(q => q.level === selection.level && q.subject === selection.subject && q.difficulty === selection.difficulty).length >= 30;
+      
+      const newBadges = [...profile.stats.badges];
+      if (isMarathon && res.stats.correct >= 20 && !newBadges.includes("Marathon 30 Soal")) {
+        newBadges.push("Marathon 30 Soal");
+      }
+
+      const updatedProfile = {
         ...profile,
         stats: {
           ...profile.stats,
@@ -541,12 +611,44 @@ export default function App() {
           totalCorrect: profile.stats.totalCorrect + res.stats.correct,
           highestScore: Math.max(profile.stats.highestScore, res.score),
           bestStreak: Math.max(profile.stats.bestStreak, res.topStreak),
+          badges: newBadges,
           history: [{ date: new Date().toISOString(), score: res.score, subject: selection!.subject, level: selection!.level }, ...profile.stats.history].slice(0, 5)
         }
-      });
+      };
+      setProfile(updatedProfile);
+      
+      // Update Leaderboard
+      const savedLb = localStorage.getItem('quiz_leaderboard');
+      let lb = savedLb ? JSON.parse(savedLb) : [];
+      const userIdx = lb.findIndex((e: any) => e.name === profile.name);
+      if (userIdx > -1) {
+        lb[userIdx].score = xp;
+        lb[userIdx].level = level;
+      } else {
+        lb.push({ name: profile.name, score: xp, level: level });
+      }
+      localStorage.setItem('quiz_leaderboard', JSON.stringify(lb));
     }
     setResult(res);
     setState('RESULT');
+  };
+
+  const startMarathon = () => {
+    if (!profile) {
+      setState('PROFILE');
+      return;
+    }
+    // Pick a random level, subject, difficulty that has questions
+    const levels: EducationLevel[] = ['SD', 'SMP', 'SMA'];
+    const subjects: Subject[] = ['Matematika', 'IPA', 'IPS', 'Bahasa Indonesia', 'Bahasa Inggris', 'PPKn'];
+    const diffs: Difficulty[] = ['Easy', 'Medium', 'Hard'];
+
+    const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+    const randomSubject = subjects[Math.floor(Math.random() * subjects.length)];
+    const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
+
+    setSelection({ level: randomLevel, subject: randomSubject, difficulty: randomDiff });
+    setState('QUIZ');
   };
 
   return (
@@ -556,9 +658,6 @@ export default function App() {
              <div className="w-10 h-10 bg-indigo-600 neo-border neo-shadow flex items-center justify-center text-white font-black text-xl">M</div>
              <h1 className="text-xl font-black uppercase tracking-tighter">QM <span className="text-indigo-600">ULTRA</span></h1>
         </div>
-        <div className="flex items-center gap-4 pointer-events-auto">
-           {/* Toolbar items can go here */}
-        </div>
       </header>
 
       <main className="flex flex-col items-center justify-center min-h-screen pt-24 pb-12 px-4">
@@ -567,9 +666,12 @@ export default function App() {
             <MainMenu 
               profile={profile} 
               onStart={() => profile ? setState('PICKER') : setState('PROFILE')} 
+              onMarathon={startMarathon}
+              onLeaderboard={() => setState('LEADERBOARD')}
               onReset={() => { setProfile(null); localStorage.removeItem('quiz_profile'); }} 
             />
           )}
+          {state === 'LEADERBOARD' && <LeaderboardView onBack={() => setState('MENU')} />}
           {state === 'PROFILE' && <ProfileForm onNext={p => { setProfile(p); setState('PICKER'); }} />}
           {state === 'PICKER' && <QuizPicker onSelect={(l, s, d) => { setSelection({ level: l, subject: s, difficulty: d }); setState('QUIZ'); }} />}
           {state === 'QUIZ' && selection && profile && <QuizSession level={selection.level} subject={selection.subject} difficulty={selection.difficulty} profile={profile} onComplete={finishQuiz} />}

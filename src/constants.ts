@@ -902,5 +902,376 @@ export const QUESTIONS: Question[] = [
     level: "SMA",
     subject: "Matematika",
     difficulty: "Easy"
+  },
+  // --- SD - Matematika - Hard ---
+  {
+    id: "sd-mtk-h-1",
+    text: "Hasil dari (12 + 18) x (20 - 15) adalah...",
+    options: ["120", "150", "180", "200"],
+    correctAnswer: 1,
+    explanation: "(30) x (5) = 150.",
+    level: "SD",
+    subject: "Matematika",
+    difficulty: "Hard"
+  },
+  {
+    id: "sd-mtk-h-2",
+    text: "Sebuah kubus memiliki volume 125 cm³. Berapa panjang rusuknya?",
+    options: ["4 cm", "5 cm", "6 cm", "10 cm"],
+    correctAnswer: 1,
+    explanation: "³√125 = 5 cm.",
+    level: "SD",
+    subject: "Matematika",
+    difficulty: "Hard"
+  },
+  // --- SMP - Bahasa Indonesia - Medium ---
+  {
+    id: "smp-ind-m-1",
+    text: "Latar tempat dalam cerita disebut juga...",
+    options: ["Alur", "Setting", "Tema", "Amanat"],
+    correctAnswer: 1,
+    explanation: "Setting atau latar mencakup waktu, tempat, dan suasana.",
+    level: "SMP",
+    subject: "Bahasa Indonesia",
+    difficulty: "Medium"
+  },
+  {
+    id: "smp-ind-m-2",
+    text: "Kalimat yang memerlukan objek disebut kalimat...",
+    options: ["Intransitif", "Aktif", "Transitif", "Pasif"],
+    correctAnswer: 2,
+    explanation: "Kalimat transitif adalah kalimat yang predikatnya membutuhkan objek.",
+    level: "SMP",
+    subject: "Bahasa Indonesia",
+    difficulty: "Medium"
+  },
+  // --- SMA - Bahasa Inggris - Easy ---
+  {
+    id: "sma-ing-e-1",
+    text: "He ... a doctor since 2010.",
+    options: ["Is", "Was", "Has been", "Have been"],
+    correctAnswer: 2,
+    explanation: "Present Perfect (since + time) uses 'has/have been'. He is singular, so 'has been'.",
+    level: "SMA",
+    subject: "Bahasa Inggris",
+    difficulty: "Easy"
+  },
+  // --- SMA - PPKn - Easy ---
+  {
+    id: "sma-ppkn-e-1",
+    text: "Siapa ketua BPUPKI?",
+    options: ["Dr. Radjiman Wedyodiningrat", "Ir. Soekarno", "Moh. Hatta", "Mr. Muh Yamin"],
+    correctAnswer: 0,
+    explanation: "Ketua BPUPKI adalah Dr. K.R.T. Radjiman Wedyodiningrat.",
+    level: "SMA",
+    subject: "PPKn",
+    difficulty: "Easy"
+  },
+  // --- SMP - PPKn - Medium ---
+  {
+    id: "smp-ppkn-m-1",
+    text: "Norma yang bersumber dari hati nurani manusia disebut...",
+    options: ["Norma Agama", "Norma Hukum", "Norma Kesusilaan", "Norma Kesopanan"],
+    correctAnswer: 2,
+    explanation: "Norma kesusilaan bersumber dari bisikan hati nurani.",
+    level: "SMP",
+    subject: "PPKn",
+    difficulty: "Medium"
+  },
+  // --- SD - PPKn - Medium ---
+  {
+    id: "sd-ppkn-m-1",
+    text: "Gotong royong adalah pengamalan Pancasila sila ke-...",
+    options: ["2", "3", "4", "5"],
+    correctAnswer: 1,
+    explanation: "Persatuan Indonesia (Sila ke-3) diwujudkan melalui kerja sama dan gotong royong.",
+    level: "SD",
+    subject: "PPKn",
+    difficulty: "Medium"
+  },
+  // --- SMP - Matematika - Easy ---
+  {
+    id: "smp-mtk-e-1",
+    text: "Himpunan bilangan prima antara 10 dan 20 adalah...",
+    options: ["{11, 13, 15, 17, 19}", "{11, 13, 17, 19}", "{11, 13, 15, 19}", "{13, 17, 19}"],
+    correctAnswer: 1,
+    explanation: "Bilangan prima antara 10-20: 11, 13, 17, 19. (15 bukan prima karena habis dibagi 3 dan 5).",
+    level: "SMP",
+    subject: "Matematika",
+    difficulty: "Easy"
+  },
+  // --- SD - IPS - Medium ---
+  {
+    id: "sd-ips-m-1",
+    text: "Letak astronomis Indonesia berada di antara...",
+    options: ["6 LU - 11 LS", "11 LU - 6 LS", "95 BT - 141 BB", "141 BT - 95 BB"],
+    correctAnswer: 0,
+    explanation: "Secara astronomis Indonesia terletak di 6°LU - 11°LS dan 95°BT - 141°BT.",
+    level: "SD",
+    subject: "IPS",
+    difficulty: "Medium"
+  },
+  // --- SMP - IPS - Hard ---
+  {
+    id: "smp-ips-h-1",
+    text: "Sistem Tanam Paksa (Cultuurstelsel) di Indonesia diprakarsai oleh...",
+    options: ["Daendels", "Van den Bosch", "Raffles", "Cornelis de Houtman"],
+    correctAnswer: 1,
+    explanation: "Johannes van den Bosch adalah pencetus sistem tanam paksa pada tahun 1830.",
+    level: "SMP",
+    subject: "IPS",
+    difficulty: "Hard"
+  },
+  // --- SMA - IPS - Easy ---
+  {
+    id: "sma-ips-e-1",
+    text: "Garis khayal yang memisahkan fauna tipe Asia dan tipe Peralihan adalah...",
+    options: ["Garis Weber", "Garis Wallace", "Garis Khatulistiwa", "Garis Bujur"],
+    correctAnswer: 1,
+    explanation: "Garis Wallace memisahkan fauna bertipe Asiatis dengan fauna Peralihan.",
+    level: "SMA",
+    subject: "IPS",
+    difficulty: "Easy"
+  },
+  // --- SMA - Matematika - Medium ---
+  {
+    id: "sma-mtk-m-1",
+    text: "Penyelesaian dari persamaan sin x = cos x untuk 0 ≤ x ≤ 180 adalah...",
+    options: ["30°", "45°", "60°", "90°"],
+    correctAnswer: 1,
+    explanation: "Sin x / Cos x = 1 => Tan x = 1. x = 45°.",
+    level: "SMA",
+    subject: "Matematika",
+    difficulty: "Medium"
+  },
+  {
+    id: "sma-mtk-m-2",
+    text: "Turunan pertama f(x) = (2x - 3)⁴ adalah...",
+    options: ["4(2x - 3)³", "8(2x - 3)³", "2(2x - 3)³", "4(2x - 3)⁴"],
+    correctAnswer: 1,
+    explanation: "f'(x) = 4 * (2x - 3)³ * 2 = 8(2x - 3)³.",
+    level: "SMA",
+    subject: "Matematika",
+    difficulty: "Medium"
+  },
+  // --- SMA - IPA - Easy ---
+  {
+    id: "sma-ipa-e-3",
+    text: "Alat untuk mengukur kuat arus listrik adalah...",
+    options: ["Voltmeter", "Amperemeter", "Ohmmeter", "Barometer"],
+    correctAnswer: 1,
+    explanation: "Amperemeter digunakan untuk mengukur kuat arus listrik.",
+    level: "SMA",
+    subject: "IPA",
+    difficulty: "Easy"
+  },
+  // --- SD - Bahasa Indonesia - Hard ---
+  {
+    id: "sd-ind-h-1",
+    text: "Kata tanya yang digunakan untuk menanyakan alasan adalah...",
+    options: ["Dimana", "Kapan", "Mengapa", "Bagaimana"],
+    correctAnswer: 2,
+    explanation: "Mengapa menanyakan alasan atau sebab terjadinya sesuatu.",
+    level: "SD",
+    subject: "Bahasa Indonesia",
+    difficulty: "Hard"
+  },
+  // --- SMP - Matematika - Hard ---
+  {
+    id: "smp-mtk-h-3",
+    text: "Panjang diagonal ruang kubus dengan panjang rusuk 6 cm adalah...",
+    options: ["6√2 cm", "6√3 cm", "12 cm", "18 cm"],
+    correctAnswer: 1,
+    explanation: "Diagonal ruang kubus = r√3. Jadi 6√3 cm.",
+    level: "SMP",
+    subject: "Matematika",
+    difficulty: "Hard"
+  },
+  // --- SMP - IPA - Easy ---
+  {
+    id: "smp-ipa-e-1",
+    text: "Organ pencernaan manusia yang berfungsi menyerap sari-sari makanan adalah...",
+    options: ["Lambung", "Usus Besar", "Usus Halus", "Kerongkongan"],
+    correctAnswer: 2,
+    explanation: "Usus halus (terutama ileum) berfungsi menyerap sari-sari makanan.",
+    level: "SMP",
+    subject: "IPA",
+    difficulty: "Easy"
+  },
+  // --- SD - Bahasa Inggris - Hard ---
+  {
+    id: "sd-ing-h-1",
+    text: "Look! The students ... football in the field.",
+    options: ["Plays", "Play", "Are playing", "Is playing"],
+    correctAnswer: 2,
+    explanation: "Look! menandakan present continuous. Students (jamak) menggunakan 'are playing'.",
+    level: "SD",
+    subject: "Bahasa Inggris",
+    difficulty: "Hard"
+  },
+  // --- SMA - IPS - Hard ---
+  {
+    id: "sma-ips-h-3",
+    text: "Peristiwa Rengasdengklok terjadi karena adanya perbedaan pendapat antara golongan tua dan golongan muda mengenai...",
+    options: ["Teks Proklamasi", "Waktu pelaksanaan Proklamasi", "Siapa yang membacakan Proklamasi", "Tempat Proklamasi"],
+    correctAnswer: 1,
+    explanation: "Golongan muda mendesak proklamasi segera dilakukan, sedangkan golongan tua ingin menunggu janji Jepang.",
+    level: "SMA",
+    subject: "IPS",
+    difficulty: "Hard"
+  },
+  // --- SMP - IPS - Easy ---
+  {
+    id: "smp-ips-e-3",
+    text: "Negara Gajah Putih adalah julukan untuk negara...",
+    options: ["Vietnam", "Laos", "Thailand", "Kamboja"],
+    correctAnswer: 2,
+    explanation: "Thailand dikenal sebagai Negeri Gajah Putih.",
+    level: "SMP",
+    subject: "IPS",
+    difficulty: "Easy"
+  },
+  // --- SMA - PPKn - Medium ---
+  {
+    id: "sma-ppkn-m-3",
+    text: "Pasal dalam UUD 1945 yang mengatur tentang hak asasi manusia adalah...",
+    options: ["Pasal 27", "Pasal 28 A-J", "Pasal 29", "Pasal 30"],
+    correctAnswer: 1,
+    explanation: "Pasal 28 A sampai J secara khusus mengatur tentang HAM hasil amandemen.",
+    level: "SMA",
+    subject: "PPKn",
+    difficulty: "Medium"
+  },
+  // --- SD - PPKn - Hard ---
+  {
+    id: "sd-ppkn-h-1",
+    text: "Lembaga yang berwenang melantik Presiden dan Wakil Presiden adalah...",
+    options: ["DPR", "MPR", "MK", "MA"],
+    correctAnswer: 1,
+    explanation: "Menurut UUD 1945, MPR berwenang melantik Presiden dan Wakil Presiden.",
+    level: "SD",
+    subject: "PPKn",
+    difficulty: "Hard"
+  },
+  // --- SMP - Bahasa Inggris - Easy ---
+  {
+    id: "smp-ing-e-1",
+    text: "What is the English word for 'Perpustakaan'?",
+    options: ["Classroom", "Laboratory", "Library", "Canteen"],
+    correctAnswer: 2,
+    explanation: "Library adalah perpustakaan.",
+    level: "SMP",
+    subject: "Bahasa Inggris",
+    difficulty: "Easy"
+  },
+  // --- SMP - PPKn - Hard ---
+  {
+    id: "smp-ppkn-h-1",
+    text: "UUD 1945 telah mengalami amandemen sebanyak ... kali.",
+    options: ["1", "2", "3", "4"],
+    correctAnswer: 3,
+    explanation: "UUD 1945 diamandemen sebanyak 4 kali (1999, 2000, 2001, 2002).",
+    level: "SMP",
+    subject: "PPKn",
+    difficulty: "Hard"
+  },
+  // --- SD - Bahasa Indonesia - Medium ---
+  {
+    id: "sd-ind-m-3",
+    text: "Cerita rakyat yang menceritakan asal-usul suatu tempat disebut...",
+    options: ["Fabel", "Legenda", "Mitos", "Sage"],
+    correctAnswer: 1,
+    explanation: "Legenda adalah cerita rakyat yang berhubungan dengan peristiwa sejarah atau asal usul tempat.",
+    level: "SD",
+    subject: "Bahasa Indonesia",
+    difficulty: "Medium"
+  },
+  // --- SMA - Matematika - Medium ---
+  {
+    id: "sma-mtk-m-3",
+    text: "Banyak cara menyusun huruf dari kata 'PELAJAR' adalah...",
+    options: ["720", "2520", "5040", "120"],
+    correctAnswer: 1,
+    explanation: "7! / 2! (karena ada dua 'A') = 5040 / 2 = 2520.",
+    level: "SMA",
+    subject: "Matematika",
+    difficulty: "Medium"
+  },
+  // --- SMP - Matematika - Medium ---
+  {
+    id: "smp-mtk-m-3",
+    text: "Penyelesaian dari persamaan 3(x - 2) = x + 10 adalah...",
+    options: ["x = 4", "x = 8", "x = 6", "x = 10"],
+    correctAnswer: 1,
+    explanation: "3x - 6 = x + 10 => 2x = 16 => x = 8.",
+    level: "SMP",
+    subject: "Matematika",
+    difficulty: "Medium"
+  },
+  // --- SMA - Bahasa Inggris - Medium ---
+  {
+    id: "sma-ing-m-3",
+    text: "The book ... by him yesterday.",
+    options: ["Writes", "Wrote", "Is written", "Was written"],
+    correctAnswer: 3,
+    explanation: "Passive voice in past tense: was/were + Verb 3. 'Was written'.",
+    level: "SMA",
+    subject: "Bahasa Inggris",
+    difficulty: "Medium"
+  },
+  // --- SD - IPA - Medium ---
+  {
+    id: "sd-ipa-m-1",
+    text: "Hewan yang bernapas dengan paru-paru dan kulit adalah...",
+    options: ["Ikan", "Burung", "Katak", "Cacing"],
+    correctAnswer: 2,
+    explanation: "Amfibi seperti katak bernapas dengan paru-paru dan kulit yang lembap.",
+    level: "SD",
+    subject: "IPA",
+    difficulty: "Medium"
+  },
+  // --- SMP - IPA - Medium ---
+  {
+    id: "smp-ipa-m-4",
+    text: "Organ yang berfungsi memompa darah ke seluruh tubuh adalah...",
+    options: ["Paru-paru", "Ginjal", "Hati", "Jantung"],
+    correctAnswer: 3,
+    explanation: "Jantung adalah organ otot yang memompa darah.",
+    level: "SMP",
+    subject: "IPA",
+    difficulty: "Medium"
+  },
+  // --- SMA - IPA - Hard ---
+  {
+    id: "sma-ipa-h-3",
+    text: "Partikel penyusun inti atom adalah...",
+    options: ["Proton dan Elektron", "Proton dan Neutron", "Elektron dan Neutron", "Hanya Proton"],
+    correctAnswer: 1,
+    explanation: "Inti atom (nukleus) terdiri dari proton dan neutron. Elektron berada di kulit atom.",
+    level: "SMA",
+    subject: "IPA",
+    difficulty: "Hard"
+  },
+  // --- SD - Matematika - Easy ---
+  {
+    id: "sd-mtk-e-3",
+    text: "Bilangan Romawi dari 9 adalah...",
+    options: ["VII", "VIII", "IX", "XI"],
+    correctAnswer: 2,
+    explanation: "IX adalah 9 (X=10, I=1 di kiri berarti dikurang).",
+    level: "SD",
+    subject: "Matematika",
+    difficulty: "Easy"
+  },
+  // --- SMP - Matematika - Easy ---
+  {
+    id: "smp-mtk-e-2",
+    text: "Suhu 100°C sama dengan ... °F.",
+    options: ["32", "112", "180", "212"],
+    correctAnswer: 3,
+    explanation: "(9/5 * 100) + 32 = 180 + 32 = 212°F.",
+    level: "SMP",
+    subject: "Matematika",
+    difficulty: "Easy"
   }
 ];
